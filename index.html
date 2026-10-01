@@ -240,6 +240,10 @@
       transition:transform .15s ease, box-shadow .15s ease;
       position:relative;
       z-index:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
     }
 
     .btn:active{transform:scale(.985)}
@@ -375,12 +379,18 @@
         សូម Follow BYD Cambodia ដើម្បីទទួលបានព័ត៌មាន ប្រូម៉ូសិន និងការបញ្ចុះតម្លៃ
       </p>
 
-      <button class="btn facebook" id="facebookButton" type="button">
+      <a
+        class="btn facebook"
+        id="facebookButton"
+        href="https://www.facebook.com/BYDCambodiaOfficial/"
+        target="_self"
+        rel="noopener"
+      >
         Facebook · Open BYD Cambodia Page
-      </button>
+      </a>
 
       <div class="hint" id="status">
-        Redirecting to Facebook automatically...
+        Opening Facebook in <span id="countdown">6</span> seconds...
       </div>
     </section>
 
@@ -404,38 +414,40 @@
 
   <script>
     const FACEBOOK_PAGE_URL = "https://www.facebook.com/BYDCambodiaOfficial/";
-    const AUTO_REDIRECT_DELAY_MS = 7000;
+    const AUTO_REDIRECT_SECONDS = 6;
 
     const facebookButton = document.getElementById("facebookButton");
     const status = document.getElementById("status");
+    const countdown = document.getElementById("countdown");
 
-    async function authorizeWifiGuest() {
-      return { success: true };
-    }
+    let secondsLeft = AUTO_REDIRECT_SECONDS;
 
-    async function openFacebook() {
-      if (openFacebook.started) return;
-      openFacebook.started = true;
+    // Important for iPhone Captive Wi-Fi:
+    // Keep the Facebook CTA as a normal <a href="..."> link.
+    // Do not block the user's tap with preventDefault(), window.open(),
+    // or a "started" flag. A real user tap has the best chance to navigate.
+    facebookButton.addEventListener("click", function () {
+      status.textContent = "Opening BYD Cambodia Facebook...";
+    });
 
-      status.textContent = "Opening Facebook...";
+    const countdownTimer = setInterval(function () {
+      secondsLeft -= 1;
 
-      try {
-        const result = await authorizeWifiGuest();
-
-        if (!result || result.success !== true) {
-          throw new Error("Authorization failed");
-        }
-
-        window.location.href = FACEBOOK_PAGE_URL;
-      } catch (error) {
-        console.error(error);
-        openFacebook.started = false;
-        status.textContent = "Please tap the Facebook button.";
+      if (countdown) {
+        countdown.textContent = Math.max(secondsLeft, 0);
       }
-    }
 
-    facebookButton.addEventListener("click", openFacebook);
-    setTimeout(openFacebook, AUTO_REDIRECT_DELAY_MS);
+      if (secondsLeft <= 0) {
+        clearInterval(countdownTimer);
+
+        status.textContent =
+          "Opening Facebook... If it does not open, tap the blue button.";
+
+        // Auto-redirect attempt. If iOS Captive Wi-Fi blocks it,
+        // the button remains fully usable because it is a normal link.
+        window.location.assign(FACEBOOK_PAGE_URL);
+      }
+    }, 1000);
   </script>
 </body>
 </html>
